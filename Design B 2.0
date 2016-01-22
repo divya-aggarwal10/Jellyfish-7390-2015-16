@@ -1,0 +1,228 @@
+package com.qualcomm.ftcrobotcontroller.opmodes;
+
+//------------------------------------------------------------------------------
+//
+// PushBotAuto
+//
+
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorController;
+
+/**
+ * Provide a basic autonomous operational mode that uses the left and right
+ * drive motors and associated encoders implemented using a state machine for
+ * the Push Bot.
+ *
+ * @author SSI Robotics
+ * @version 2015-08-01-06-01
+ */
+public class AutoFunction extends PushBotTelemetry
+
+{
+
+    DcMotor motorRightFront;
+    DcMotor motorLeftFront;
+    DcMotor motorRightBack;
+    DcMotor motorLeftBack;
+    DcMotor baseMotor;
+    DcMotor ziptie;
+    DcMotor stringRight;
+    DcMotor stringLeft;
+    //--------------------------------------------------------------------------
+    //
+    // PushBotAuto
+    //
+
+    /**
+     * Construct the class.
+     * <p/>
+     * The system calls this member when the class is instantiated.
+     */
+    public AutoFunction(){
+    }
+
+    /*
+     * Code to run when the op mode is first enabled goes here
+     *
+     * @see com.qualcomm.robotcore.eventloop.opmode.OpMode#start()
+     */
+    @Override
+    public void init() {
+		/*
+		 * Use the hardwareMap to get the dc motors and servos by name. Note
+		 * that the names of the devices must match the names used when you
+		 * configured your robot and created the configuration file.
+		 */
+
+		/*
+		 * Sets motors 1 and 2 to the right side and motors 3 and 4 to the left side(reversed)
+		 * motor 5 and 6 are reserved for shooters(for lack of a better name)
+		 * We need another motor control now.
+		 */
+        motorRightFront = hardwareMap.dcMotor.get("motor_1");
+        motorLeftFront = hardwareMap.dcMotor.get("motor_3");
+        motorRightBack = hardwareMap.dcMotor.get("motor_2");
+        motorLeftBack = hardwareMap.dcMotor.get("motor_4");
+        ziptie = hardwareMap.dcMotor.get("motor_5");
+        stringRight = hardwareMap.dcMotor.get("motor_6");
+        baseMotor = hardwareMap.dcMotor.get("motor_7");
+        stringLeft = hardwareMap.dcMotor.get("motor_8");
+        motorLeftFront.setDirection(DcMotor.Direction.REVERSE);
+        motorLeftBack.setDirection(DcMotor.Direction.REVERSE);
+        stringLeft.setDirection(DcMotor.Direction.REVERSE);
+        //--------------------------------------------------------------------------
+        //
+        // loop
+        //
+        /**
+         * Implement a state machine that controls the robot during auto-operation.
+         * The state machine uses a class member and encoder input to transition
+         * between states.
+         *
+         * The system calls this member repeatedly while the OpMode is running.
+         */
+    }
+    @Override
+    public void loop () {
+        autoFunction(1.0 ,1.0);
+
+    }
+    void autoFunction(double leftDrive, double rightDrive) {
+        reset_drive_encoders();
+        set_drive_power(1.0f, 1.0f);
+        if (have_drive_encoders_reached(leftDrive*2880, rightDrive*2880)) {
+            reset_drive_encoders();
+            set_drive_power(0.0, 0.0);
+        }
+    }
+        void set_drive_power (double p_left_power, double p_right_power)
+
+        {
+            if (motorLeftFront != null)
+            {
+                motorLeftFront.setPower (p_left_power);
+                motorLeftBack.setPower (p_left_power);
+            }
+            if (motorRightFront != null)
+            {
+                motorRightFront.setPower (p_right_power);
+                motorLeftBack.setPower(p_right_power);
+            }
+
+        } // set_drive_power
+    public void reset_left_drive_encoder ()
+
+    {
+        if (motorLeftFront != null)
+        {
+            motorLeftFront.setChannelMode
+                    (DcMotorController.RunMode.RESET_ENCODERS);
+        }
+    } // reset_left_drive_encoder
+    //--------------------------------------------------------------------------
+    // reset_right_drive_encoder
+    /**
+     * Reset the right drive wheel encoder.
+     */
+    public void reset_right_drive_encoder ()
+
+    {
+        if (motorRightFront != null)
+        {
+            motorRightFront.setChannelMode
+                    ( DcMotorController.RunMode.RESET_ENCODERS);
+        }
+    } // reset_right_drive_encoder
+
+    //--------------------------------------------------------------------------
+    // reset_drive_encoders
+    /**
+     * Reset both drive wheel encoders.
+     */
+    public void reset_drive_encoders ()
+
+    {
+        // Reset the motor encoders on the drive wheels.
+        reset_left_drive_encoder ();
+        reset_right_drive_encoder ();
+    } // reset_drive_encoders
+    boolean have_drive_encoders_reached( double p_left_count, double p_right_count)
+
+    {
+        // Assume failure.
+        boolean l_return = false;
+        // Have the encoders reached the specified values?
+        if (has_left_drive_encoder_reached (p_left_count) &&
+                has_right_drive_encoder_reached (p_right_count))
+        {
+            // Set the status to a positive indication.
+            l_return = true;
+        }
+        // Return the status
+        return l_return;
+
+    } // have_encoders_reached
+    boolean has_left_drive_encoder_reset ()
+    {
+        // Assume failure.
+        boolean l_return = false;
+        // Has the left encoder reached zero?
+        if (a_left_encoder_count () == 0)
+        {
+            // Set the status to a positive indication.
+            l_return = true;
+        }
+        // Return the status.
+        return l_return;
+    } // has_left_drive_encoder_reset
+
+    //--------------------------------------------------------------------------
+    // has_right_drive_encoder_reset
+    /**
+     * Indicate whether the left drive encoder has been completely reset.
+     */
+    boolean has_right_drive_encoder_reset ()
+    {
+        // Assume failure.
+        boolean l_return = false;
+        // Has the right encoder reached zero?
+        if (a_right_encoder_count () == 0)
+        {
+            // Set the status to a positive indication.
+            l_return = true;
+        }
+
+        // Return the status.
+        return l_return;
+    } // has_right_drive_encoder_reset
+
+    //--------------------------------------------------------------------------
+    // have_drive_encoders_reset
+    /**
+     * Indicate whether the encoders have been completely reset.
+     */
+    boolean have_drive_encoders_reset ()
+    {
+        // Assume failure.
+        boolean l_return = false;
+        // Have the encoders reached zero?
+        if (has_left_drive_encoder_reset () && has_right_drive_encoder_reset ())
+        {
+            // Set the status to a positive indication.
+            l_return = true;
+        }
+        // Return the status.
+        return l_return;
+    } // have_drive_encoders_reset
+    //--------------------------------------------------------------------------
+    // v_state
+    /**
+     * This class member remembers which state is currently active.  When the
+     * start method is called, the state will be initialized (0).  When the loop
+     * starts, the state will change from initialize to state_1.  When state_1
+     * actions are complete, the state will change to state_2.  This implements
+     * a state machine for the loop method.
+     */
+    private int v_state = 0;
+
+} // PushBotAuto
